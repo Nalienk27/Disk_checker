@@ -1,0 +1,33 @@
+---
+- name: Check disk usage via port-forwarded SSH
+  hosts: diskmon
+  gather_facts: no
+  tasks:
+    - name: Check for disk usage > 80%
+      shell: df -hP | awk '$5+0 > 80 && $1 ~ /^\// { print $0 }'
+      register: disk_output
+      ignore_errors: yes
+
+    - name: Write alert to local file on control node
+      delegate_to: localhost
+      lineinfile:
+        path: /tmp/disk_alerts.txt
+        line: |
+          ALERT: {{ inventory_hostname }} ({{ hostvars[inventory_hostname]['friendly_name'] | default('Unknown') }})
+          {{ disk_output.stdout }}
+      when: disk_output.stdout != ""
+
+- name: Send alert email using mailx and clear alert file
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Send mail using mailx
+      shell: |
+        cat /tmp/disk_alerts.txt | mailx -s "Disk Usage Alert" -r "nalien.a@wyzmindz.com" nalien.a@wyzmindz.com kishor@wyzmindz.com leo@wyzmindz.com vishal.anand@wyzmindz.com
+      when: lookup('file', '/tmp/disk_alerts.txt') is search('ALERT')
+
+    - name: Clear /tmp/disk_alerts.txt after sending mail
+      copy:
+        content: ""
+        dest: /tmp/disk_alerts.txt
+      when: lookup('file', '/tmp/disk_alerts.txt') is search('ALERT')
