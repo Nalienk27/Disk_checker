@@ -23,7 +23,7 @@
   tasks:
     - name: Send mail using mailx
       shell: |
-        cat /tmp/disk_alerts.txt | mailx -s "Naudabao Server Disk Usage Alert" -r "nalien.a@wyzmindz.com" nalien.a@wyzmindz.com kishor@wyzmindz.com leo@wyzmindz.com vishal.anand@wyzmindz.com
+        cat /tmp/disk_alerts.txt | mailx -s "Linux Server Disk Usage Alert" -r "yourmailid@mail.com" nalien.a@mail.com
       when: lookup('file', '/tmp/disk_alerts.txt') is search('ALERT')
 
     - name: Clear /tmp/disk_alerts.txt after sending mail
